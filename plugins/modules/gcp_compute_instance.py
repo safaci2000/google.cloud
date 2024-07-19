@@ -332,6 +332,47 @@ options:
             - 'Some valid choices include: "PREMIUM", "STANDARD"'
             required: false
             type: str
+      ipv6_access_config:
+              description:
+              - An array of configurations for this interface. Currently, only one access
+                config, DIRECT_IPV6, is supported. If there are no accessConfigs specified,
+                then this instance will have no external internet access. This section is specific for
+                IPV6 functionality. If IP is dualstack, then both ipv6_access_config and access_config can be
+                configured
+              elements: dict
+              required: false
+              type: list
+              suboptions:
+                name:
+                  description:
+                  - The name of this access configuration. The default and recommended name
+                    is External NAT but you can use any arbitrary string you would like.
+                    For example, My external IP or Network Access.
+                  required: true
+                  type: str
+                type:
+                  description:
+                  - The type of configuration. The default and only option is DIRECT_IPV6.
+                  - 'Some valid choices include: "DIRECT_IPV6"'
+                  required: true
+                  type: str
+                externalIpv6:
+                  description:
+                  - Applies to ipv6AccessConfigs only. The first IPv6 address of the external IPv6 range
+                    associated with this instance, prefix length is stored in externalIpv6PrefixLength in
+                    ipv6AccessConfig.
+                  required: false
+                  type: str
+                externalIpv6PrefixLength:
+                  description:
+                  - Applies to ipv6AccessConfigs only. The prefix length of the external IPv6 range.
+                  required: false
+                  type: int
+                network_tier:
+                  description:
+                  - Same as access_config, but for IPV6 the only valid value is "PREMIUM".
+                  required: true
+                  type: str
       alias_ip_ranges:
         description:
         - An array of alias IP ranges for this network interface. Can only be specified
@@ -606,6 +647,12 @@ EXAMPLES = '''
       environment: production
     network_interfaces:
     - network: "{{ network }}"
+    ipv6_access_configs:
+      - externalIpv6: "2600:1900:4001:656:0:3::"
+        externalIpv6PrefixLength: 96
+        name: "external-ipv6-access"
+        network_tier: "PREMIUM"
+        type: DIRECT_IPV6
       access_configs:
       - name: External NAT
         nat_ip: "{{ address }}"
@@ -1160,8 +1207,7 @@ def main():
                             name=dict(required=True, type='str'),
                             externalIpv6=dict(required=False, type='str'),
                             externalIpv6PrefixLength=dict(type='int'),
-                            nat_ip=dict(type='dict'),
-                            network_tier=dict(type='str'),
+                            network_tier=dict(required=True, type='str'),
                             type=dict(required=True, type='str'),
                         ),
                     ),
@@ -1764,10 +1810,8 @@ class InstanceIPV6AccessconfigsArray(object):
             {
                 u'externalIpv6PrefixLength': item.get('externalIpv6PrefixLength'),
                 u'externalIpv6': item.get('externalIpv6'),
-                u'natIP': item.get(u'natIP'),
                 u'name': item.get('name'),
                 u'type': item.get('type'),
-                u'publicPtrDomainName': item.get('public_ptr_domain_name'),
                 u'networkTier': item.get('network_tier'),
             }
         )
@@ -1777,10 +1821,8 @@ class InstanceIPV6AccessconfigsArray(object):
             {
                 u'externalIpv6PrefixLength': item.get('externalIpv6PrefixLength'),
                 u'externalIpv6': item.get('externalIpv6'),
-                u'natIP': item.get(u'natIP'),
                 u'name': item.get('name'),
                 u'type': item.get('type'),
-                u'publicPtrDomainName': item.get('public_ptr_domain_name'),
                 u'networkTier': item.get('network_tier'),
             }
         )
